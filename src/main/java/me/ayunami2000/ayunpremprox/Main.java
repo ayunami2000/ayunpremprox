@@ -39,18 +39,20 @@ public class Main {
     private static boolean forwardUsername=false;
 
     public static void main(String[] args){
-        try {
-            String[] accList = new String(Files.readAllBytes(Path.of("alts.txt"))).trim().replaceAll("\\r","").split("\n");
-            for (String acc : accList) {
-                accs.add(acc.split(":",2));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
         if(args.length>0&&args[0].equalsIgnoreCase("cracked"))isCracked=true;
         if(args.length>0&&args[0].equalsIgnoreCase("forward"))isCracked=forwardUsername=true;
+
+        if(!isCracked) {
+            try {
+                String[] accList = new String(Files.readAllBytes(Path.of("alts.txt"))).trim().replaceAll("\\r", "").split("\n");
+                for (String acc : accList) {
+                    accs.add(acc.split(":", 2));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
 
         SessionService sessionService = new SessionService();
         sessionService.setProxy(Proxy.NO_PROXY);
