@@ -3,6 +3,7 @@ package me.ayunami2000.ayunpremprox;
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.auth.service.AuthenticationService;
 import com.github.steveice10.mc.auth.service.MojangAuthenticationService;
+import com.github.steveice10.mc.auth.service.MsaAuthenticationService;
 import com.github.steveice10.mc.auth.service.SessionService;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
@@ -139,11 +140,20 @@ public class Main {
             if(isCracked){
                 protocol = new MinecraftProtocol(userpass[0]);
             }else {
-                AuthenticationService authService = new MojangAuthenticationService();
-                authService.setUsername(userpass[0]);
-                authService.setPassword(userpass[1]);
-                authService.setProxy(Proxy.NO_PROXY);
-                authService.login();
+                AuthenticationService authService;
+                if(userpass[0].startsWith("<MS> ")){
+                    authService = new MsaAuthenticationService("ayunpremprox"+Math.random());
+                    authService.setUsername(userpass[0].substring(5));
+                    authService.setPassword(userpass[1]);
+                    authService.setProxy(Proxy.NO_PROXY);
+                    authService.login();
+                }else {
+                    authService = new MojangAuthenticationService();
+                    authService.setUsername(userpass[0]);
+                    authService.setPassword(userpass[1]);
+                    authService.setProxy(Proxy.NO_PROXY);
+                    authService.login();
+                }
 
                 protocol = new MinecraftProtocol(authService.getSelectedProfile(), authService.getAccessToken());
             }
