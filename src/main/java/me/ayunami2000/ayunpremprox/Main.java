@@ -129,31 +129,20 @@ public class Main {
 
         MinecraftProtocol protocol;
         try {
-            /*
-            AuthenticationService authService = new MsaAuthenticationService("ayunpremprox"+Math.random());
-            authService.setUsername(args[0]);
-            authService.setPassword(args[1]);
-            authService.setProxy(Proxy.NO_PROXY);
-            authService.login();
-            */
-
             if(isCracked){
                 protocol = new MinecraftProtocol(userpass[0]);
             }else {
                 AuthenticationService authService;
                 if(userpass[0].startsWith("<MS> ")){
                     authService = new MsaAuthenticationService("ayunpremprox"+Math.random());
-                    authService.setUsername(userpass[0].substring(5));
-                    authService.setPassword(userpass[1]);
-                    authService.setProxy(Proxy.NO_PROXY);
-                    authService.login();
+                    userpass[0] = userpass[0].substring(5);
                 }else {
                     authService = new MojangAuthenticationService();
-                    authService.setUsername(userpass[0]);
-                    authService.setPassword(userpass[1]);
-                    authService.setProxy(Proxy.NO_PROXY);
-                    authService.login();
                 }
+                authService.setUsername(userpass[0]);
+                authService.setPassword(userpass[1]);
+                authService.setProxy(Proxy.NO_PROXY);
+                authService.login();
 
                 protocol = new MinecraftProtocol(authService.getSelectedProfile(), authService.getAccessToken());
             }
