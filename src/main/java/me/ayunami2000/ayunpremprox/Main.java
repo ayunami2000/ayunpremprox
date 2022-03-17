@@ -1,10 +1,7 @@
 package me.ayunami2000.ayunpremprox;
 
 import com.github.steveice10.mc.auth.exception.request.RequestException;
-import com.github.steveice10.mc.auth.service.AuthenticationService;
-import com.github.steveice10.mc.auth.service.MojangAuthenticationService;
-import com.github.steveice10.mc.auth.service.MsaAuthenticationService;
-import com.github.steveice10.mc.auth.service.SessionService;
+import com.github.steveice10.mc.auth.service.*;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.ServerLoginHandler;
@@ -27,6 +24,7 @@ import com.github.steveice10.packetlib.tcp.TcpServer;
 
 import java.io.IOException;
 import java.net.Proxy;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -34,6 +32,8 @@ import java.util.*;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.response.Account;
 import com.thealtening.api.retriever.BasicDataRetriever;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class Main {
     private static Map<Session,Session> srvToCli = new HashMap<>();
@@ -43,8 +43,11 @@ public class Main {
     private static boolean forwardUsername=false;
     private static boolean useAltening=false;
     private static BasicDataRetriever alteningApi = null;
+    private static URI alteningUri = URI.create("http://sessionserver.thealtening.com/session/minecraft/");
 
     public static void main(String[] args){
+        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+
         if(args.length>0){
             if(args[0].equalsIgnoreCase("cracked"))isCracked=true;
             if(args[0].equalsIgnoreCase("forward"))isCracked=forwardUsername=true;
@@ -141,9 +144,7 @@ public class Main {
         if(isCracked) {
             userpass[0] = forwardUsername ? crackedUsername : getSaltString(10);
         }else if(useAltening){
-            Account acc = alteningApi.getAccount();
-            userpass[0] = acc.getUsername();
-            userpass[1] = acc.getPassword();
+            //do nothing
         }else {
             while (takenAccs.contains(accIndex)) accIndex++;
             if (accs.size() <= accIndex) {
@@ -155,11 +156,16 @@ public class Main {
 
         MinecraftProtocol protocol;
         try {
-            if(isCracked){
+            if(isCracked) {
                 protocol = new MinecraftProtocol(userpass[0]);
             }else {
                 AuthenticationService authService;
-                if(userpass[0].startsWith("<MS> ")){
+                if(useAltening){
+                    Account acc = alteningApi.getAccount();
+                    authService = new AlteningAuthService();
+                    userpass[0] = acc.getToken();
+                    userpass[1] = "ayunpremprox";
+                }else if(userpass[0].startsWith("<MS> ")){
                     authService = new MsaAuthenticationService("ayunpremprox"+Math.random());
                     userpass[0] = userpass[0].substring(5);
                 }else {
@@ -178,7 +184,12 @@ public class Main {
             return null;
         }
 
-        SessionService sessionService = new SessionService();
+        SessionService sessionService;
+        if(useAltening){
+            sessionService = new SessionService(alteningUri);
+        }else {
+            sessionService = new SessionService();
+        }
         sessionService.setProxy(Proxy.NO_PROXY);
 
         Session client = new TcpClientSession(args.length<3?"mh-prd.minehut.com":args[2], args.length<4?25565:Integer.parseInt(args[3]), protocol, null);
