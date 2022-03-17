@@ -31,23 +31,41 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import com.thealtening.api.TheAltening;
+import com.thealtening.api.response.Account;
+import com.thealtening.api.retriever.BasicDataRetriever;
+
 public class Main {
     private static Map<Session,Session> srvToCli = new HashMap<>();
     private static List<String[]> accs = new ArrayList<>();
     private static List<Integer> takenAccs = new ArrayList<>();
     private static boolean isCracked=false;
     private static boolean forwardUsername=false;
+    private static boolean useAltening=false;
+    private static BasicDataRetriever alteningApi = null;
 
     public static void main(String[] args){
-        if(args.length>0&&args[0].equalsIgnoreCase("cracked"))isCracked=true;
-        if(args.length>0&&args[0].equalsIgnoreCase("forward"))isCracked=forwardUsername=true;
+        if(args.length>0){
+            if(args[0].equalsIgnoreCase("cracked"))isCracked=true;
+            if(args[0].equalsIgnoreCase("forward"))isCracked=forwardUsername=true;
+            if(args[0].equalsIgnoreCase("thealtening"))useAltening=true;
+        }
 
-        if(!isCracked) {
+        if(!isCracked&&!useAltening) {
             try {
                 String[] accList = new String(Files.readAllBytes(Path.of("alts.txt"))).trim().replaceAll("\\r", "").split("\n");
                 for (String acc : accList) {
                     accs.add(acc.split(":", 2));
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+        if(useAltening){
+            try {
+                String key = new String(Files.readAllBytes(Path.of("altkey.txt"))).trim();
+                alteningApi = TheAltening.newBasicRetriever(key);
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
@@ -95,8 +113,10 @@ public class Main {
                 //kick client...
                 //System.out.println("srv disc");
                 Session cliSession = srvToCli.get(event.getSession());
-                cliSession.disconnect("");
-                srvToCli.remove(event.getSession(), cliSession);
+                if(cliSession!=null) {
+                    cliSession.disconnect("");
+                    srvToCli.remove(event.getSession(), cliSession);
+                }
             }
         });
 
@@ -118,8 +138,12 @@ public class Main {
         int accIndex = 0;
         String[] userpass = new String[]{"",""};
 
-        if(isCracked){
-            userpass[0]=forwardUsername?crackedUsername:getSaltString(10);
+        if(isCracked) {
+            userpass[0] = forwardUsername ? crackedUsername : getSaltString(10);
+        }else if(useAltening){
+            Account acc = alteningApi.getAccount();
+            userpass[0] = acc.getUsername();
+            userpass[1] = acc.getPassword();
         }else {
             while (takenAccs.contains(accIndex)) accIndex++;
             if (accs.size() <= accIndex) {

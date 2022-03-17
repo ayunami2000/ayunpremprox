@@ -27,6 +27,11 @@
             <version>1.18-3</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.thealtening.api</groupId>
+            <artifactId>api</artifactId>
+            <version>4.1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
