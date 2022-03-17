@@ -1,0 +1,8 @@
+runjar ayunpremprox.jar cracked 25569 play.kaboom.pw
+runjar ayunpremprox.jar
+runjar ayunpremprox.jar forward 25569 play.kaboom.pw
+runjar ayunpremprox.jar lol 25569 us.mineplex.com
+runjar ayunpremprox.jar lol 25569 mc.hypixel.net
+runjar ayunpremprox.jar lol 25569 play.totalfreedom.me
+runjar ayunpremprox.jar lol 25569 connect.2b2t.org
+runjar ayunpremprox.jar forward 25569 classic.ipdfreedom.me
