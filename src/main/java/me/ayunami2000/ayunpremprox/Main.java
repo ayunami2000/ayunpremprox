@@ -44,6 +44,7 @@ public class Main {
     private static boolean useAltening=false;
     private static BasicDataRetriever alteningApi = null;
     private static URI alteningUri = URI.create("http://sessionserver.thealtening.com/session/minecraft/");
+    private static String[] servers = {"mh-prd.minehut.com"};
 
     public static void main(String[] args){
         HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
@@ -53,6 +54,8 @@ public class Main {
             if(args[0].equalsIgnoreCase("forward"))isCracked=forwardUsername=true;
             if(args[0].equalsIgnoreCase("thealtening"))useAltening=true;
         }
+
+        if(args.length>2)servers=args[2].split(",");
 
         if(!isCracked&&!useAltening) {
             try {
@@ -192,7 +195,7 @@ public class Main {
         }
         sessionService.setProxy(Proxy.NO_PROXY);
 
-        Session client = new TcpClientSession(args.length<3?"mh-prd.minehut.com":args[2], args.length<4?25565:Integer.parseInt(args[3]), protocol, null);
+        Session client = new TcpClientSession(servers[(int)Math.floor(Math.random()*servers.length)], args.length<4?25565:Integer.parseInt(args[3]), protocol, null);
         client.setFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
         int finalAccIndex = accIndex;
         String[] finalUserpass = userpass;
