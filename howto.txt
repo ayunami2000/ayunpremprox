@@ -8,3 +8,4 @@ runjar ayunpremprox.jar lol 25569 connect.2b2t.org
 runjar ayunpremprox.jar forward 25569 classic.ipdfreedom.me
 runjar ayunpremprox.jar thealtening 25569 us.mineplex.com
 runjar ayunpremprox.jar thealtening 25569 play.kaboom.pw,play.totalfreedom.me
+runjar ayunpremprox.jar forward 25569 play.kaboom.pw,mcfreedom.eu

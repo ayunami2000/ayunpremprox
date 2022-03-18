@@ -5,7 +5,10 @@ import com.github.steveice10.mc.auth.service.*;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.ServerLoginHandler;
+import com.github.steveice10.mc.protocol.codec.MinecraftCodec;
 import com.github.steveice10.mc.protocol.packet.handshake.serverbound.ClientIntentionPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.clientbound.ClientboundChatPacket;
+import com.github.steveice10.mc.protocol.packet.ingame.clientbound.ClientboundDisconnectPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.serverbound.ServerboundKeepAlivePacket;
 import com.github.steveice10.mc.protocol.packet.login.clientbound.ClientboundGameProfilePacket;
 import com.github.steveice10.mc.protocol.packet.login.clientbound.ClientboundHelloPacket;
@@ -104,6 +107,14 @@ public class Main {
                         if(forwardUsername&&packet instanceof ServerboundHelloPacket){
                             un[0] = ((ServerboundHelloPacket)packet).getUsername();
                         }
+                        if(packet instanceof ClientIntentionPacket){
+                            if(((ClientIntentionPacket)packet).getProtocolVersion()<MinecraftCodec.CODEC.getProtocolVersion()){
+                                String discMsg = "\"Sorry, but this server only supports version "+MinecraftCodec.CODEC.getMinecraftVersion()+"\nConsider using a mod like ViaFabric to make your life easier!\"";
+                                session.send(new ClientboundDisconnectPacket(discMsg));
+                                session.disconnect("");
+                                return;
+                            }
+                        }
                         if(cliSession[0]==null)return;
                         if(packet instanceof ClientIntentionPacket)return;
                         if(packet instanceof ServerboundHelloPacket)return;
@@ -195,7 +206,13 @@ public class Main {
         }
         sessionService.setProxy(Proxy.NO_PROXY);
 
-        Session client = new TcpClientSession(servers[(int)Math.floor(Math.random()*servers.length)], args.length<4?25565:Integer.parseInt(args[3]), protocol, null);
+        String[] srv = servers[(int)Math.floor(Math.random()*servers.length)].split(":");
+        int p=25565;
+        try{
+            p=Integer.parseInt(srv[1]);
+        }catch(NumberFormatException | ArrayIndexOutOfBoundsException e){}
+
+        Session client = new TcpClientSession(srv[0], p, protocol, null);
         client.setFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
         int finalAccIndex = accIndex;
         String[] finalUserpass = userpass;
