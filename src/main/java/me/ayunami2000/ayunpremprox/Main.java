@@ -1,11 +1,16 @@
 package me.ayunami2000.ayunpremprox;
 
+import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.auth.exception.request.RequestException;
 import com.github.steveice10.mc.auth.service.*;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.ServerLoginHandler;
 import com.github.steveice10.mc.protocol.codec.MinecraftCodec;
+import com.github.steveice10.mc.protocol.data.status.PlayerInfo;
+import com.github.steveice10.mc.protocol.data.status.ServerStatusInfo;
+import com.github.steveice10.mc.protocol.data.status.VersionInfo;
+import com.github.steveice10.mc.protocol.data.status.handler.ServerInfoBuilder;
 import com.github.steveice10.mc.protocol.packet.handshake.serverbound.ClientIntentionPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.clientbound.ClientboundChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.clientbound.ClientboundDisconnectPacket;
@@ -35,6 +40,7 @@ import java.util.*;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.response.Account;
 import com.thealtening.api.retriever.BasicDataRetriever;
+import net.kyori.adventure.text.Component;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -87,6 +93,14 @@ public class Main {
         Server server = new TcpServer("127.0.0.1", args.length<2?25569:Integer.parseInt(args[1]), MinecraftProtocol::new);
         server.setGlobalFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
         server.setGlobalFlag(MinecraftConstants.VERIFY_USERS_KEY, false);
+        server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, (ServerInfoBuilder) session ->
+                new ServerStatusInfo(
+                        new VersionInfo(MinecraftCodec.CODEC.getMinecraftVersion(), MinecraftCodec.CODEC.getProtocolVersion()),
+                        new PlayerInfo(42069, 0, new GameProfile[0]),
+                        Component.text("ayunpremprox"),
+                        null
+                )
+        );
         server.setGlobalFlag(MinecraftConstants.SERVER_COMPRESSION_THRESHOLD, 256);
         server.addListener(new ServerAdapter() {
             @Override
@@ -169,11 +183,11 @@ public class Main {
         }
 
         MinecraftProtocol protocol;
+        AuthenticationService authService = null;
         try {
             if(isCracked) {
                 protocol = new MinecraftProtocol(userpass[0]);
             }else {
-                AuthenticationService authService;
                 if(useAltening){
                     Account acc = alteningApi.getAccount();
                     authService = new AlteningAuthService();
@@ -216,6 +230,7 @@ public class Main {
         client.setFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
         int finalAccIndex = accIndex;
         String[] finalUserpass = userpass;
+        AuthenticationService finalAuthService = authService;
         client.addListener(new SessionAdapter() {
             @Override
             public void packetReceived(Session session, Packet packet) {
@@ -232,6 +247,13 @@ public class Main {
                 //kick server...
                 //System.out.println("cli disc: "+event.getReason());
                 System.out.println("Logged out user "+ finalUserpass[0]);
+                if(finalAuthService !=null) {
+                    try {
+                        finalAuthService.logout();
+                    } catch (RequestException e) {
+                        e.printStackTrace();
+                    }
+                }
                 takenAccs.remove(finalAccIndex);
                 srvSession.disconnect("");
                 srvToCli.remove(srvSession, client);
