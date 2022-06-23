@@ -1,3 +1,5 @@
+BUILDING: clean compile assembly:single
+
 runjar ayunpremprox.jar cracked 25569 play.kaboom.pw
 runjar ayunpremprox.jar
 runjar ayunpremprox.jar forward 25569 play.kaboom.pw
